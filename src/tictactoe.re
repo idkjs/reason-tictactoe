@@ -1,8 +1,8 @@
-[%bs.raw {|require('./tictactoe.css')|}];
+[%raw {|"require('./tictactoe.css')"|}];
 
-let animationDataPlayer1 = [%bs.raw {|require('./x.json')|}];
+let animationDataPlayer1 = [%raw {|"require('./x.json')"|}];
 
-let animationDataPlayer2 = [%bs.raw {|require('./o.json')|}];
+let animationDataPlayer2 = [%raw {|"require('./o.json')"|}];
 
 open Player;
 
@@ -21,8 +21,6 @@ type state = {
 type action =
   | TokenAdded(rowId, colId);
 
-let component = ReasonReact.reducerComponent("TicTacToe");
-
 let isWinByToken = (board: board, rId: rowId, cId: colId, token: token) =>
   if (getRowLine(board, rId) |> isLineFullWith(token)) {
     true;
@@ -33,89 +31,83 @@ let isWinByToken = (board: board, rId: rowId, cId: colId, token: token) =>
     |> List.map(isLineFullWith(token))
     |> List.fold_left((res, isFull) => res || isFull, false);
   };
-
-let make = _children => {
-  ...component,
-  initialState: () => {
+[@react.component]
+let make = () => {
+  let initialState = {
     board: (
       (Empty, Empty, Empty),
       (Empty, Empty, Empty),
       (Empty, Empty, Empty),
     ),
     progress: Turn(Cross),
-  },
-  reducer: (action, state) =>
-    switch (action, state.progress) {
-    | (TokenAdded(rId, cId), Turn(p)) =>
-      let currentToken = Mark(p);
-      let updateBoard = updateBoard(state.board, rId, cId, currentToken);
-      if (isWinByToken(updateBoard, rId, cId, currentToken)) {
-        ReasonReact.Update({progress: Win(p), board: updateBoard});
-      } else if (! isBoardFull(updateBoard)) {
-        ReasonReact.Update({
-          progress:
-            updateBoard === state.board ?
-              Turn(p) : Turn(p === Cross ? Circle : Cross),
-          board: updateBoard,
-        });
-      } else {
-        ReasonReact.Update({progress: Draw, board: updateBoard});
-      };
-    | _ => ReasonReact.NoUpdate
-    },
-  render: ({state, send}) => {
-    let title =
-      switch (state.progress) {
-      | Turn(p) => "Player " ++ toString(p) ++ " turn"
-      | Win(p) => "Player " ++ toString(p) ++ " won"
-      | Draw => "It's a draw"
-      };
-    <div className="tic-tac-toe">
-      <div className="title">
-        <div className="title__main">
-          (ReasonReact.stringToElement("TIC TAC TOE"))
-        </div>
-        <div className="title__sub">
-          (ReasonReact.stringToElement(title))
-        </div>
-      </div>
-      <div className="board">
-        (
-          [R1, R2, R3]
-          |> List.map(rId => [C1, C2, C3] |> List.map(cId => (rId, cId)))
-          |> List.flatten
-          |> List.map(((rId, cId)) =>
-               <div
-                 className="board__cell"
-                 key=(row_to_str(rId) ++ col_to_str(cId))
-                 onClick=(_event => send(TokenAdded(rId, cId)))>
-                 (
-                   switch (getToken(state.board, rId, cId)) {
-                   | Mark(Cross) =>
-                     <Lottie
-                       options={
-                         animationData: animationDataPlayer1,
-                         loop: true,
-                         autoplay: true,
-                       }
-                     />
-                   | Mark(Circle) =>
-                     <Lottie
-                       options={
-                         animationData: animationDataPlayer2,
-                         loop: false,
-                         autoplay: true,
-                       }
-                     />
-                   | Empty => ReasonReact.stringToElement("")
+  };
+  let (state, dispatch) =
+    React.useReducer(
+      (state, action) =>
+        switch (action, state.progress) {
+        | (TokenAdded(rId, cId), Turn(p)) =>
+          let currentToken = Mark(p);
+          let updateBoard = updateBoard(state.board, rId, cId, currentToken);
+          if (isWinByToken(updateBoard, rId, cId, currentToken)) {
+            {progress: Win(p), board: updateBoard};
+          } else if (!isBoardFull(updateBoard)) {
+            {
+              progress:
+                updateBoard === state.board
+                  ? Turn(p) : Turn(p === Cross ? Circle : Cross),
+              board: updateBoard,
+            };
+          } else {
+            {progress: Draw, board: updateBoard};
+          };
+        | _ => state
+        },
+      initialState,
+    );
+
+  let title =
+    switch (state.progress) {
+    | Turn(p) => "Player " ++ toString(p) ++ " turn"
+    | Win(p) => "Player " ++ toString(p) ++ " won"
+    | Draw => "It's a draw"
+    };
+  <div className="tic-tac-toe">
+    <div className="title">
+      <div className="title__main"> {React.string("TIC TAC TOE")} </div>
+      <div className="title__sub"> {React.string(title)} </div>
+    </div>
+    <div className="board">
+      {[R1, R2, R3]
+       |> List.map(rId => [C1, C2, C3] |> List.map(cId => (rId, cId)))
+       |> List.flatten
+       |> List.map(((rId, cId)) =>
+            <div
+              className="board__cell"
+              key={row_to_str(rId) ++ col_to_str(cId)}
+              onClick={_event => dispatch(TokenAdded(rId, cId))}>
+              {switch (getToken(state.board, rId, cId)) {
+               | Mark(Cross) =>
+                 <Lottie
+                   options={
+                     animationData: animationDataPlayer1,
+                     loop: true,
+                     autoplay: true,
                    }
-                 )
-               </div>
-             )
-          |> Array.of_list
-          |> ReasonReact.arrayToElement
-        )
-      </div>
-    </div>;
-  },
+                 />
+               | Mark(Circle) =>
+                 <Lottie
+                   options={
+                     animationData: animationDataPlayer2,
+                     loop: false,
+                     autoplay: true,
+                   }
+                 />
+               | Empty => React.string("")
+               }}
+            </div>
+          )
+       |> Array.of_list
+       |> React.array}
+    </div>
+  </div>;
 };

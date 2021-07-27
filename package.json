@@ -3,25 +3,31 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "bs-platform": "^3.0.0",
-    "gh-pages": "^1.1.0",
+    "bs-platform": "^9.0.2",
+    "gh-pages": "^3.2.3",
     "lottie-web": "^5.1.13",
-    "react": "^16.3.2",
-    "react-dom": "^16.3.2",
-    "reason-scripts": "^0.8.0"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "reason-scripts": "^1.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "prepare": "npm link bs-platform",
+    "watch": "bsb -make-world -w",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "^0.4.2",
-    "reason-react": "^0.3.4"
+    "@glennsl/bs-jest": "^0.7.0",
+    "reason-react": "^0.9.1"
   },
-  "homepage": "https://jrakotoharisoa.github.io/reason-tictactoe/"
+  "homepage": "https://jrakotoharisoa.github.io/reason-tictactoe/",
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

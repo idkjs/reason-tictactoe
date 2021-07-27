@@ -1,4 +1,4 @@
-type lottieAnimation = {. setSpeed: int => unit};
+type lottieAnimation = {setSpeed: int => unit};
 
 type action =
   | Pause;
@@ -10,16 +10,15 @@ type optionProps = {
 };
 
 type animationOptions = {
-  .
-  "container": Dom.element,
-  "renderer": string,
-  "loop": bool,
-  "autoplay": bool,
-  "animationData": string,
+  container: Dom.element,
+  renderer: string,
+  loop: bool,
+  autoplay: bool,
+  animationData: string,
 };
 
 [@bs.val] [@bs.module "lottie-web"]
-external loadAnimation : animationOptions => lottieAnimation = "";
+external loadAnimation: animationOptions => lottieAnimation = "loadAnimation";
 
 let defaultSize = "100%";
 
@@ -28,11 +27,7 @@ type state = {
   animation: ref(option(lottieAnimation)),
 };
 
-let setRef = (theRef, {ReasonReact.state}) =>
-  state.ref := Js.Nullable.toOption(theRef);
-
-let component = ReasonReact.reducerComponent("Lottie");
-
+[@react.component]
 let make =
     /* ~eventListeners=[], */
     (
@@ -46,53 +41,53 @@ let make =
       ~ariaRole="button",
       ~isClickToPauseDisabled=false,
       ~title="",
-      _children,
     ) => {
-  let clickPause = (_event, {ReasonReact.send}) =>
-    isClickToPauseDisabled ? () : send(Pause);
-  {
-    ...component,
-    initialState: () => {ref: ref(None), animation: ref(None)},
-    didMount: ({state}) => {
-      switch (state.ref^) {
-      | Some(ref) =>
-        Js.log(ref);
-        let animationOptions = {
-          "container": ref,
-          "renderer": "svg",
-          "loop": options.loop !== false,
-          "autoplay": options.autoplay !== false,
-          "animationData": options.animationData,
-        };
-        let animation = loadAnimation(animationOptions);
-        state.animation := Some(animation);
-      | None => ()
+  // initialState: () => {ref: ref(None), animation: ref(None)},
+  let theRef: React.ref(Js.Nullable.t(Dom.element)) =
+    React.useRef(Js.Nullable.null);
+  let (state, dispatch) =
+    React.useReducer(
+      (state, action) =>
+        switch (action) {
+        | Pause => state
+        },
+      {ref: ref(None), animation: ref(None)},
+    );
+  React.useEffect(() => {
+    switch (state.ref^) {
+    | Some(ref) =>
+      Js.log(ref);
+      let animationOptions = {
+        container: ref,
+        renderer: "svg",
+        loop: options.loop !== false,
+        autoplay: options.autoplay !== false,
+        animationData: options.animationData,
       };
-      ReasonReact.NoUpdate;
-    },
-    reducer: (action, _state) =>
-      switch (action) {
-      | Pause => ReasonReact.NoUpdate
-      },
-    render: self => {
-      let lottieStyles =
-        ReactDOMRe.Style.make(
-          ~overflow="hidden",
-          ~marginTop="0",
-          ~marginRight="auto",
-          ~marginBottom="0",
-          ~marginLeft="auto",
-          ~height,
-          ~width,
-          (),
-        );
-      <div
-        ref=(self.handle(setRef))
-        style=lottieStyles
-        title
-        role=ariaRole
-        onClick=(self.handle(clickPause))
-      />;
-    },
-  };
+      let animation = loadAnimation(animationOptions);
+      state.animation := Some(animation);
+    | None => ()
+    };
+    None;
+  });
+
+  let clickPause = _event => isClickToPauseDisabled ? () : dispatch(Pause);
+  let lottieStyles =
+    ReactDOMRe.Style.make(
+      ~overflow="hidden",
+      ~marginTop="0",
+      ~marginRight="auto",
+      ~marginBottom="0",
+      ~marginLeft="auto",
+      ~height,
+      ~width,
+      (),
+    );
+  <div
+    ref={ReactDOM.Ref.domRef(theRef)}
+    style=lottieStyles
+    title
+    role=ariaRole
+    onClick=clickPause
+  />;
 };
